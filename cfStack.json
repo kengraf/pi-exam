@@ -1,21 +1,16 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloudFormation template to create a Lambda function with API Gateway v2 (HTTP API) to return an HTTP cookie",
   "Parameters" : {
       "S3bucketName" : { "Type" : "String" },
       "DnsName" : { "Type" : "String" },
+      "CustomSubdomanName" : { "Type" : "String" },
       "DeployName" : { "Type" : "String" }
   },
   "Resources": {
-    "LambdaRole": {
+    "LambdaExecutionRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
-        "RoleName": "${DeployName}-lambda",
-        "Tags": [
-          {
-            "Key": "Owner",
-            "Value": "${DeployName}"
-          }
-        ],
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -30,13 +25,17 @@
         },
         "Policies": [
           {
-            "PolicyName": "${DeployName}-lambda",
+            "PolicyName": "LambdaExecutionPolicy",
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
                 {
                   "Effect": "Allow",
-                  "Action": "dynamodb:*",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
                   "Resource": "*"
                 }
               ]
@@ -45,28 +44,28 @@
         ]
       }
     },
+
     "PiExamFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "${DeployName}-pi-exam",
+        "FunctionName": "${DeployName}",
         "Tags": [
           {
             "Key": "Owner",
             "Value": "${DeployName}"
           }
         ],
-        "Runtime": "nodejs16.x",
-        "Handler": "index.handler",
+        "Runtime": "python3.12",
+        "Handler": "index.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
-            "LambdaRole",
+            "LambdaExecutionRole",
             "Arn"
           ]
         },
         "Code": {
           "ZipFile": "s3://${S3bucketName}/pi-exam.zip"
-        },
-        "MemorySize": 512
+        }
       }
     },
 
@@ -159,3 +158,108 @@
       }
     }
   }
+----------------------------
+
+
+    "ApiGatewayHttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "SetCookieHttpApi",
+        "ProtocolType": "HTTP"
+      }
+    },
+    "ApiGatewayIntegration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::Sub": [
+            "arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations",
+            {
+              "Region": {
+                "Ref": "AWS::Region"
+              },
+              "LambdaArn": {
+                "Fn::GetAtt": [
+                  "SetCookieFunction",
+                  "Arn"
+                ]
+              }
+            }
+          ]
+        },
+        "PayloadFormatVersion": "2.0"
+      }
+    },
+    "ApiGatewayRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi"
+        },
+        "RouteKey": "GET /set-cookie",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "ApiGatewayIntegration"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "ApiGatewayStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi"
+        },
+        "StageName": "prod",
+        "AutoDeploy": true
+      }
+    },
+    "LambdaInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SetCookieFunction",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:${Region}:${AccountId}:${ApiId}/*/GET/set-cookie",
+            {
+              "Region": {
+                "Ref": "AWS::Region"
+              },
+              "AccountId": {
+                "Ref": "AWS::AccountId"
+              },
+              "ApiId": {
+                "Ref": "ApiGatewayHttpApi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ApiUrl": {
+      "Description": "URL of the API Gateway HTTP endpoint",
+      "Value": {
+        "Fn::Sub": "https://${ApiGatewayHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/set-cookie"
+      }
+    }
+  }
+}

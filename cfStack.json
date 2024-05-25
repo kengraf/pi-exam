@@ -1,0 +1,229 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters" : {
+      "S3bucketName" : { "Type" : "String" },
+      "DnsName" : { "Type" : "String" },
+      "DeployName" : { "Type" : "String" }
+  },
+  "Resources": {
+    "LambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "${DeployName}-lambda",
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "${DeployName}"
+          }
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "${DeployName}-lambda",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "dynamodb:*",
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Table": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "${DeployName}",
+        "BillingMode": "PAY_PER_REQUEST",
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "${DeployName}"
+          }
+        ],
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "Name",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "Name",
+            "KeyType": "HASH"
+          }
+        ]
+      }
+    },
+    "ReloadFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "${DeployName}-reload",
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "${DeployName}"
+          }
+        ],
+        "Runtime": "nodejs16.x",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": "s3://${S3bucketName}/deploy/lambda/reload.zip"
+        }
+      }
+    },
+    "FetchFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "${DeployName}-fetch",
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "${DeployName}"
+          }
+        ],
+        "Runtime": "nodejs16.x",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": "s3://${S3bucketName}/deploy/lambda/fetch.zip"
+        },
+        "MemorySize": 512
+      }
+    },
+    "SnsTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "DisplayName": "${DeployName}-reload"
+      }
+    },
+    "SnsSubscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Protocol": "lambda",
+        "TopicArn": {
+          "Ref": "SnsTopic"
+        },
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "ReloadFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "Api": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "${DeployName}",
+        "ProtocolType": "HTTP",
+        "Target": {
+          "Fn::GetAtt": [
+            "FetchFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "Integration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "RedoApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "FetchFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "1.0"
+      }
+    },
+    "CustomDomainCertificate": {
+      "Type": "AWS::ACM::Certificate",
+      "Properties": {
+        "DomainName": {"Fn::Sub" : "wild.${DnsName}"}
+      }
+    },
+    "CustomDomain": {
+      "Type": "AWS::ApiGatewayV2::DomainName",
+      "Properties": {
+        "DomainName": {"Fn::Sub" : "${DeployName}.${DnsName}."},
+        "DomainNameConfigurations": [
+          {
+            "CertificateArn": {
+              "Ref": "CustomDomainCertificate"
+            },
+            "EndpointType": "REGIONAL"
+          }
+        ]
+      }
+    },
+    "ApiMapping": {
+      "Type": "AWS::ApiGatewayV2::ApiMapping",
+      "Properties": {
+        "ApiId": {
+          "Fn::ImportValue" : {"Fn::Sub" : "${DeployName}-Api"} }
+        },
+        "DomainName": {
+          "Ref": "CustomDomain"
+        },
+        "Stage": "$default"
+      }
+    },
+    "Route53Record": {
+      "Type": "AWS::Route53::RecordSetGroup",
+      "Properties": {
+        "HostedZoneId": "ZRWFREAU725TM",
+        "RecordSets": [
+          {
+            "Name": {"Fn::ImportValue" : {"Fn::Sub" : "${DeployName}.${DnsName}."}},
+            "Type": "A",
+            "AliasTarget": {
+              "HostedZoneId": {
+                "Fn::GetAtt": [
+                  "CustomDomain",
+                  "HostedZoneId"
+                ]
+              },
+              "DNSName": {
+                "Fn::GetAtt": [
+                  "CustomDomain",
+                  "ApiGatewayDomainName"
+                ]
+              },
+              "EvaluateTargetHealth": false
+            }
+          }
+        ]
+      }
+    }
+  }

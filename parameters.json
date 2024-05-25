@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "DeployName",
+    "ParameterValue": "undefined-deploy"
+  },
+  {
+    "ParameterKey": "DnsName",
+    "ParameterValue": "cyber-unh.org"
+  },
+  {
+    "ParameterKey": "S3bucketName",
+    "ParameterValue": "undefined-bucket"
+  }
+]

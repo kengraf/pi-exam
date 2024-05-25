@@ -1,15 +1,15 @@
-[
+graf.cmo[
   {
     "ParameterKey": "DeployName",
     "ParameterValue": "pi-exam"
   },
   {
     "ParameterKey": "DnsName",
-    "ParameterValue": "YOUR-DOMAIN-NAME"
+    "ParameterValue": "kengraf.com"
   },
   {
     "ParameterKey": "CustomSubdomainName",
-    "ParameterValue": "pi-exam.YOUR-DOMAIN-NAME"
+    "ParameterValue": "pi-exam.kengraf.com"
   },
   {
     "ParameterKey": "S3bucketName",

@@ -1,7 +1,7 @@
 [
   {
     "ParameterKey": "DeployName",
-    "ParameterValue": "pi-exam
+    "ParameterValue": "pi-exam"
   },
   {
     "ParameterKey": "DnsName",

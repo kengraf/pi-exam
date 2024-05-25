@@ -8,23 +8,16 @@ if [ -z "$1" ]
     exit 1
 fi
 
-sed -ri "s/undefined-deploy/${STACK_NAME}/" parameters.json
+sed -ri "s/YOUR-DOMAIN-NAME/${STACK_NAME}/" parameters.json
 
 S3BUCKET=$STACK_NAME-$(tr -dc a-f0-9 </dev/urandom | head -c 10)
-sed -ri "s/undefined-bucket/${S3BUCKET}/" parameters.json
-sed -ri "s/${STACK_NAME}-[0-9a-f]*/${S3BUCKET}/" parameters.json
+sed -ri "s/YOUR-BUCKET-NAME/${S3BUCKET}/" parameters.json
 
 echo "Creating stack..."
 
 # upload lambda functions
-cd lambda/fetch
-zip fetch.zip -xi index.js
-aws s3 cp fetch.zip s3://${S3BUCKET}/deploy/lambda/fetch.zip
-cd ../..
-cd lambda/reload
-zip reload.zip -xi index.js
-aws s3 cp reload.zip s3://${S3BUCKET}/deploy/lambda/reload.zip
-cd ../..
+zip pi-exam.zip -xi pi-exam.py
+aws s3 cp fetch.zip s3://${S3BUCKET}/pi-exam.zip
 
 # upload cf stack
 aws cloudformation create-stack --stack-name ${STACK_NAME} --template-body file://cfStack.json --capabilities CAPABILITY_NAMED_IAM --parameters file://parameters.json --tags file://tags.json --output text

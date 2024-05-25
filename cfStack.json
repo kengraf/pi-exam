@@ -45,35 +45,10 @@
         ]
       }
     },
-    "Table": {
-      "Type": "AWS::DynamoDB::Table",
-      "Properties": {
-        "TableName": "${DeployName}",
-        "BillingMode": "PAY_PER_REQUEST",
-        "Tags": [
-          {
-            "Key": "Owner",
-            "Value": "${DeployName}"
-          }
-        ],
-        "AttributeDefinitions": [
-          {
-            "AttributeName": "Name",
-            "AttributeType": "S"
-          }
-        ],
-        "KeySchema": [
-          {
-            "AttributeName": "Name",
-            "KeyType": "HASH"
-          }
-        ]
-      }
-    },
-    "ReloadFunction": {
+    "PiExamFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "${DeployName}-reload",
+        "FunctionName": "${DeployName}-pi-exam",
         "Tags": [
           {
             "Key": "Owner",
@@ -89,55 +64,12 @@
           ]
         },
         "Code": {
-          "ZipFile": "s3://${S3bucketName}/deploy/lambda/reload.zip"
-        }
-      }
-    },
-    "FetchFunction": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "FunctionName": "${DeployName}-fetch",
-        "Tags": [
-          {
-            "Key": "Owner",
-            "Value": "${DeployName}"
-          }
-        ],
-        "Runtime": "nodejs16.x",
-        "Handler": "index.handler",
-        "Role": {
-          "Fn::GetAtt": [
-            "LambdaRole",
-            "Arn"
-          ]
-        },
-        "Code": {
-          "ZipFile": "s3://${S3bucketName}/deploy/lambda/fetch.zip"
+          "ZipFile": "s3://${S3bucketName}/pi-exam.zip"
         },
         "MemorySize": 512
       }
     },
-    "SnsTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {
-        "DisplayName": "${DeployName}-reload"
-      }
-    },
-    "SnsSubscription": {
-      "Type": "AWS::SNS::Subscription",
-      "Properties": {
-        "Protocol": "lambda",
-        "TopicArn": {
-          "Ref": "SnsTopic"
-        },
-        "Endpoint": {
-          "Fn::GetAtt": [
-            "ReloadFunction",
-            "Arn"
-          ]
-        }
-      }
-    },
+
     "Api": {
       "Type": "AWS::ApiGatewayV2::Api",
       "Properties": {
@@ -145,7 +77,7 @@
         "ProtocolType": "HTTP",
         "Target": {
           "Fn::GetAtt": [
-            "FetchFunction",
+            "PiExamFunction",
             "Arn"
           ]
         }
@@ -155,12 +87,12 @@
       "Type": "AWS::ApiGatewayV2::Integration",
       "Properties": {
         "ApiId": {
-          "Ref": "RedoApi"
+          "Ref": "PiExam-Api"
         },
         "IntegrationType": "AWS_PROXY",
         "IntegrationUri": {
           "Fn::GetAtt": [
-            "FetchFunction",
+            "PiExamFunction",
             "Arn"
           ]
         },
@@ -170,7 +102,7 @@
     "CustomDomainCertificate": {
       "Type": "AWS::ACM::Certificate",
       "Properties": {
-        "DomainName": {"Fn::Sub" : "wild.${DnsName}"}
+        "DomainName": {"Fn::Sub" : "pi-exam.${DnsName}"}
       }
     },
     "CustomDomain": {

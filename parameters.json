@@ -1,14 +1,18 @@
 [
   {
     "ParameterKey": "DeployName",
-    "ParameterValue": "undefined-deploy"
+    "ParameterValue": "pi-exam
   },
   {
     "ParameterKey": "DnsName",
-    "ParameterValue": "cyber-unh.org"
+    "ParameterValue": "YOUR-DOMAIN-NAME"
+  },
+  {
+    "ParameterKey": "CustomSubdomainName",
+    "ParameterValue": "pi-exam.YOUR-DOMAIN-NAME"
   },
   {
     "ParameterKey": "S3bucketName",
-    "ParameterValue": "undefined-bucket"
+    "ParameterValue": "YOUR-BUCKET-NAME"
   }
 ]

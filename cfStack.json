@@ -1,12 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "CloudFormation template to create a Lambda function with API Gateway v2 (HTTP API) to return an HTTP cookie",
-  "Parameters" : {
-      "S3bucketName" : { "Type" : "String" },
-      "DnsName" : { "Type" : "String" },
-      "CustomSubdomanName" : { "Type" : "String" },
-      "DeployName" : { "Type" : "String" }
-  },
   "Resources": {
     "LambdaExecutionRole": {
       "Type": "AWS::IAM::Role",
@@ -44,18 +38,10 @@
         ]
       }
     },
-
-    "PiExamFunction": {
+    "SetCookieFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "${DeployName}",
-        "Tags": [
-          {
-            "Key": "Owner",
-            "Value": "${DeployName}"
-          }
-        ],
-        "Runtime": "python3.12",
+        "FunctionName": "SetCookieFunction",
         "Handler": "index.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
@@ -63,104 +49,44 @@
             "Arn"
           ]
         },
+        "Runtime": "python3.9",
         "Code": {
-          "ZipFile": "s3://${S3bucketName}/pi-exam.zip"
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "import json",
+                "",
+                "def lambda_handler(event, context):",
+                "    cookie_value = 'my_cookie_value'",
+                "    cookie_name = 'my_cookie'",
+                "    max_age = 3600  # 1 hour in seconds",
+                "    path = '/'",
+                "    secure = True",
+                "    http_only = True",
+                "",
+                "    set_cookie_header = f\"{cookie_name}={cookie_value}; Max-Age={max_age}; Path={path};\"",
+                "    if secure:",
+                "        set_cookie_header += ' Secure;'",
+                "    if http_only:",
+                "        set_cookie_header += ' HttpOnly;'",
+                "",
+                "    response = {",
+                "        'statusCode': 200,",
+                "        'headers': {",
+                "            'Set-Cookie': set_cookie_header,",
+                "            'Content-Type': 'application/json'",
+                "        },",
+                "        'body': json.dumps({'message': 'Cookie has been set!'})",
+                "    }",
+                "",
+                "    return response"
+              ]
+            ]
+          }
         }
       }
     },
-
-    "Api": {
-      "Type": "AWS::ApiGatewayV2::Api",
-      "Properties": {
-        "Name": "${DeployName}",
-        "ProtocolType": "HTTP",
-        "Target": {
-          "Fn::GetAtt": [
-            "PiExamFunction",
-            "Arn"
-          ]
-        }
-      }
-    },
-    "Integration": {
-      "Type": "AWS::ApiGatewayV2::Integration",
-      "Properties": {
-        "ApiId": {
-          "Ref": "PiExam-Api"
-        },
-        "IntegrationType": "AWS_PROXY",
-        "IntegrationUri": {
-          "Fn::GetAtt": [
-            "PiExamFunction",
-            "Arn"
-          ]
-        },
-        "PayloadFormatVersion": "1.0"
-      }
-    },
-    "CustomDomainCertificate": {
-      "Type": "AWS::ACM::Certificate",
-      "Properties": {
-        "DomainName": {"Fn::Sub" : "pi-exam.${DnsName}"}
-      }
-    },
-    "CustomDomain": {
-      "Type": "AWS::ApiGatewayV2::DomainName",
-      "Properties": {
-        "DomainName": {"Fn::Sub" : "${DeployName}.${DnsName}."},
-        "DomainNameConfigurations": [
-          {
-            "CertificateArn": {
-              "Ref": "CustomDomainCertificate"
-            },
-            "EndpointType": "REGIONAL"
-          }
-        ]
-      }
-    },
-    "ApiMapping": {
-      "Type": "AWS::ApiGatewayV2::ApiMapping",
-      "Properties": {
-        "ApiId": {
-          "Fn::ImportValue" : {"Fn::Sub" : "${DeployName}-Api"} }
-        },
-        "DomainName": {
-          "Ref": "CustomDomain"
-        },
-        "Stage": "$default"
-      }
-    },
-    "Route53Record": {
-      "Type": "AWS::Route53::RecordSetGroup",
-      "Properties": {
-        "HostedZoneId": "ZRWFREAU725TM",
-        "RecordSets": [
-          {
-            "Name": {"Fn::ImportValue" : {"Fn::Sub" : "${DeployName}.${DnsName}."}},
-            "Type": "A",
-            "AliasTarget": {
-              "HostedZoneId": {
-                "Fn::GetAtt": [
-                  "CustomDomain",
-                  "HostedZoneId"
-                ]
-              },
-              "DNSName": {
-                "Fn::GetAtt": [
-                  "CustomDomain",
-                  "ApiGatewayDomainName"
-                ]
-              },
-              "EvaluateTargetHealth": false
-            }
-          }
-        ]
-      }
-    }
-  }
-----------------------------
-
-
     "ApiGatewayHttpApi": {
       "Type": "AWS::ApiGatewayV2::Api",
       "Properties": {

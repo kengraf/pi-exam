@@ -1,6 +1,12 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "CloudFormation template to create a Lambda function with API Gateway v2 (HTTP API) to return an HTTP cookie",
+  "Parameters" : {
+      "S3bucketName" : { "Type" : "String" },
+      "DnsName" : { "Type" : "String" },
+      "DeployName" : { "Type" : "String" },
+      "CustomSubdomainName" : { "Type" : "String" }
+  },
   "Resources": {
     "LambdaExecutionRole": {
       "Type": "AWS::IAM::Role",

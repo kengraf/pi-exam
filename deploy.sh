@@ -11,7 +11,7 @@ fi
 sed -ri "s/YOUR-DOMAIN-NAME/${STACK_NAME}/" parameters.json
 
 S3BUCKET=$STACK_NAME-$(tr -dc a-f0-9 </dev/urandom | head -c 10)
-S3BUCKEY="pi-exam-f6cc2fe20f"
+S3BUCKET="pi-exam-f6cc2fe20f"
 sed -ri "s/YOUR-BUCKET-NAME/${S3BUCKET}/" parameters.json
 
 echo "Creating stack..."

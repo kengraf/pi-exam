@@ -55,7 +55,7 @@
             "Arn"
           ]
         },
-        "Runtime": "python3.9",
+        "Runtime": "python3.12",
         "Code": {
           "ZipFile": {
             "Fn::Join": [

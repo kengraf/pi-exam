@@ -46,7 +46,7 @@
     "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "piexamFunction",
+        "FunctionName": {"Fn::Sub" : "${DeployName}-Function"},
         "Handler": "index.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
@@ -99,7 +99,7 @@
         "ApiId": {
           "Ref": "ApiGatewayHttpApi"
         },
-        "RouteKey": "GET /set-cookie",
+        "RouteKey": "GET /",
         "Target": {
           "Fn::Join": [
             "/",

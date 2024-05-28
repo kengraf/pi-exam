@@ -4,6 +4,7 @@
   "Parameters" : {
       "S3bucketName" : { "Type" : "String" },
       "DeployName" : { "Type" : "String" },
+      "CertificateArn" : { "Type" : "String" },
       "CustomDomainName" : { "Type" : "String" }
   },
   "Resources": {

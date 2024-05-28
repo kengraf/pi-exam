@@ -1,7 +1,7 @@
 #!/bin/bash
 
 STACK_NAME=`jq -r 'map(select(.ParameterKey == "DeployName"))[0].ParameterValue' parameters.json`
-S3BUCKET=`jq -r 'map(select(.ParameterKey == "S3BucketName"))[0].ParameterValue' parameters.json`
+S3BUCKET=`jq -r 'map(select(.ParameterKey == "S3bucketName"))[0].ParameterValue' parameters.json`
 
 echo "Creating stack..."
 

@@ -3,9 +3,8 @@
   "Description": "CloudFormation template to create a Lambda function with API Gateway v2 (HTTP API) to return an HTTP cookie",
   "Parameters" : {
       "S3bucketName" : { "Type" : "String" },
-      "DnsName" : { "Type" : "String" },
       "DeployName" : { "Type" : "String" },
-      "CustomSubdomainName" : { "Type" : "String" }
+      "CustomDomainName" : { "Type" : "String" }
   },
   "Resources": {
     "LambdaExecutionRole": {
@@ -44,10 +43,10 @@
         ]
       }
     },
-    "SetCookieFunction": {
+    "${DeployName}Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "SetCookieFunction",
+        "FunctionName": "${DeployName}Function",
         "Handler": "index.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
@@ -57,46 +56,14 @@
         },
         "Runtime": "python3.12",
         "Code": {
-          "ZipFile": {
-            "Fn::Join": [
-              "\n",
-              [
-                "import json",
-                "",
-                "def lambda_handler(event, context):",
-                "    cookie_value = 'my_cookie_value'",
-                "    cookie_name = 'my_cookie'",
-                "    max_age = 3600  # 1 hour in seconds",
-                "    path = '/'",
-                "    secure = True",
-                "    http_only = True",
-                "",
-                "    set_cookie_header = f\"{cookie_name}={cookie_value}; Max-Age={max_age}; Path={path};\"",
-                "    if secure:",
-                "        set_cookie_header += ' Secure;'",
-                "    if http_only:",
-                "        set_cookie_header += ' HttpOnly;'",
-                "",
-                "    response = {",
-                "        'statusCode': 200,",
-                "        'headers': {",
-                "            'Set-Cookie': set_cookie_header,",
-                "            'Content-Type': 'application/json'",
-                "        },",
-                "        'body': json.dumps({'message': 'Cookie has been set!'})",
-                "    }",
-                "",
-                "    return response"
-              ]
-            ]
-          }
+          "ZipFile": "s3://${S3bucketName}/${DeployName}.zip"
         }
       }
     },
     "ApiGatewayHttpApi": {
       "Type": "AWS::ApiGatewayV2::Api",
       "Properties": {
-        "Name": "SetCookieHttpApi",
+        "Name": "${DeployName}HttpApi",
         "ProtocolType": "HTTP"
       }
     },
@@ -116,7 +83,7 @@
               },
               "LambdaArn": {
                 "Fn::GetAtt": [
-                  "SetCookieFunction",
+                  "${DeployName}Function",
                   "Arn"
                 ]
               }
@@ -162,14 +129,14 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "SetCookieFunction",
+            "${DeployName}Function",
             "Arn"
           ]
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
           "Fn::Sub": [
-            "arn:aws:execute-api:${Region}:${AccountId}:${ApiId}/*/GET/set-cookie",
+            "arn:aws:execute-api:${Region}:${AccountId}:${ApiId}/*/GET/",
             {
               "Region": {
                 "Ref": "AWS::Region"
@@ -190,7 +157,13 @@
     "ApiUrl": {
       "Description": "URL of the API Gateway HTTP endpoint",
       "Value": {
-        "Fn::Sub": "https://${ApiGatewayHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/set-cookie"
+        "Fn::Sub": "https://${ApiGatewayHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+      }
+    },
+    "CustomDomainUrl": {
+      "Description": "URL of the custom domain for the API Gateway endpoint",
+      "Value": {
+        "Fn::Sub": "https://${CustomDomainName}/"
       }
     }
   }

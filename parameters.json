@@ -4,15 +4,11 @@
     "ParameterValue": "pi-exam"
   },
   {
-    "ParameterKey": "DnsName",
-    "ParameterValue": "kengraf.com"
-  },
-  {
     "ParameterKey": "CustomSubdomainName",
     "ParameterValue": "pi-exam.kengraf.com"
   },
   {
     "ParameterKey": "S3bucketName",
-    "ParameterValue": "YOUR-BUCKET-NAME"
+    "ParameterValue": "pi-exam-f6cc2fe20f"
   }
 ]

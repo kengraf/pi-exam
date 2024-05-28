@@ -46,8 +46,8 @@
     "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": {"Fn::Sub" : "${DeployName}-Function"},
-        "Handler": "index.lambda_handler",
+        "FunctionName": {"Fn::Sub" : "${DeployName}"},
+        "Handler": {"Fn::Sub" : "${DeployName}.lambda_handler" },
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",

@@ -43,7 +43,7 @@
         ]
       }
     },
-    "${DeployName}Function": {
+    "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "FunctionName": "${DeployName}Function",
@@ -83,7 +83,7 @@
               },
               "LambdaArn": {
                 "Fn::GetAtt": [
-                  "${DeployName}Function",
+                  "Function",
                   "Arn"
                 ]
               }
@@ -129,7 +129,7 @@
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
           "Fn::GetAtt": [
-            "${DeployName}Function",
+            "Function",
             "Arn"
           ]
         },

@@ -8,6 +8,10 @@
     "ParameterValue": "pi-exam.kengraf.com"
   },
   {
+    "ParameterKey": "CertificateARN",
+    "ParameterValue": "arn:aws:acm:us-east-2:788715698479:certificate/f5a199d0-7175-4992-bc7c-8ed2ad71541b"
+  },
+  {
     "ParameterKey": "S3bucketName",
     "ParameterValue": "pi-exam-f6cc2fe20f"
   }

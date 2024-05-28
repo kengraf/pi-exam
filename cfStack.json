@@ -46,7 +46,7 @@
     "Function": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "FunctionName": "${DeployName}Function",
+        "FunctionName": "${DeployName}-Function",
         "Handler": "index.lambda_handler",
         "Role": {
           "Fn::GetAtt": [
@@ -56,14 +56,14 @@
         },
         "Runtime": "python3.12",
         "Code": {
-          "ZipFile": "s3://${S3bucketName}/pi-exam.zip"
+          "ZipFile": "s3://${S3bucketName}/${DeployName}.zip"
         }
       }
     },
     "ApiGatewayHttpApi": {
       "Type": "AWS::ApiGatewayV2::Api",
       "Properties": {
-        "Name": "${DeployName}HttpApi",
+        "Name": "${DeployName}-HttpApi",
         "ProtocolType": "HTTP"
       }
     },

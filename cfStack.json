@@ -56,14 +56,15 @@
         },
         "Runtime": "python3.12",
         "Code": {
-          "ZipFile": "s3://${S3bucketName}/${DeployName}.zip"
+          "S3Bucket": {"Fn::Sub" : "${S3bucketName}" },
+          "S3Key": {"Fn::Sub" : "${DeployName}.zip" }
         }
       }
     },
     "ApiGatewayHttpApi": {
       "Type": "AWS::ApiGatewayV2::Api",
       "Properties": {
-        "Name": "${DeployName}-HttpApi",
+        "Name": {"Fn::Sub" : "${DeployName}-HttpApi" },
         "ProtocolType": "HTTP"
       }
     },

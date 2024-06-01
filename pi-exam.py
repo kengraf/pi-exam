@@ -22,7 +22,7 @@ def add_response_image( image_url ):
     return 0
 
 def add_response_message( message ):
-    response_body += message
+    response_body += "<p>" + message + "</p>
     return 0
     
 def lambda_handler(event, context):
@@ -30,15 +30,23 @@ def lambda_handler(event, context):
     load_cookie_state(event['headers'].get('cookie', ''))
 
     # / 
-    # parm is pi = "yeah you know how to google pi" page success 
+    # parm is pi =  page success 
+    add_response_message( "yeah you know how to google pi" )
     # pi by reducing digits PARMS DIGITS<100 =  success 0x01
+    add_response_message( "parms not 100" )
     # parm is SQLi = success 0X02
+    add_response_message( "sqli found" )
     # AUTH==TRUE header  = success 0X04
+    add_response_message( "auth header" )
     # state cookie delta = success 0X08
+    add_response_message( "cookie changed" )
     # show "login" page
+    add_response_message( "show initial login form" )
     # /admin page
+    add_response_message( "tbd admin page" )
     #    Direct request, return this code as HTML 0X08
     # /champion page
+    add_response_message( "tbd champion page" )
     # Create the Set-Cookie header
     cookie_header = f"state={state}; Max-Age=3600; Path=/; Secure; HttpOnly;"
 
@@ -49,7 +57,8 @@ def lambda_handler(event, context):
             'Set-Cookie': cookie_header,
             'Content-Type': 'application/json'
         },
-        'body': json.dumps({'message': 'Cookie has been set!'})
+#        'body': json.dumps({'message': 'Cookie has been set!'})
+        'body': response_body
     }
 
     return response

@@ -154,7 +154,7 @@
       "Properties": {
         "DomainName": { "Ref": "DomainName" },
         "EndpointConfiguration": {
-          "Types": [ "EDGE" ]
+          "Types": [ "REGIONAL" ]
         },
         "RegionalCertificateArn": { "Ref": "CertificateArn" }
       }

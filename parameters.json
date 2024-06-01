@@ -1,11 +1,11 @@
 [
   {
     "ParameterKey": "DeployName",
-    "ParameterValue": "pi-exam"
+    "ParameterValue": "pi"
   },
   {
     "ParameterKey": "CustomDomainName",
-    "ParameterValue": "pi-exam.kengraf.com"
+    "ParameterValue": "pi.kengraf.com"
   },
   {
     "ParameterKey": "CertificateARN",

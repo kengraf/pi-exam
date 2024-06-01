@@ -156,7 +156,7 @@
         "EndpointConfiguration": {
           "Types": [ "EDGE" ]
         },
-        "RegionalCertificateArn": ( "Ref": "CertificateArn" }
+        "RegionalCertificateArn": { "Ref": "CertificateArn" }
       }
     },
     "MyRecordSet": {

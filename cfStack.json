@@ -197,20 +197,13 @@
           "Fn::Sub": [
             "arn:aws:execute-api:${Region}:${AccountId}:${ApiId}/*/GET/",
             {
-              "Region": {
-                "Ref": "AWS::Region"
-              },
-              "AccountId": {
-                "Ref": "AWS::AccountId"
-              },
-              "ApiId": {
-                "Ref": "ApiGatewayHttpApi"
-              }
+              "Region": { "Ref": "AWS::Region" },
+              "AccountId": { "Ref": "AWS::AccountId" },
+              "ApiId": { "Ref": "ApiGatewayHttpApi" }
             }
           ]
         }
       }
-    }
   },
   "Outputs": {
     "ApiUrl": {

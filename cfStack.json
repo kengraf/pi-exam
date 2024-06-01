@@ -180,7 +180,7 @@
           }
         }
       }
-    }
+    },
     "LambdaInvokePermission": {
         "Type": "AWS::Lambda::Permission",
         "Properties": {

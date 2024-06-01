@@ -181,27 +181,27 @@
         }
       }
     }
-  },
-  "LambdaInvokePermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": [
-            "arn:aws:execute-api:${Region}:${AccountId}:${ApiId}/*/GET/",
-            {
-              "Region": { "Ref": "AWS::Region" },
-              "AccountId": { "Ref": "AWS::AccountId" },
-              "ApiId": { "Ref": "ApiGatewayHttpApi" }
-            }
-          ]
+    "LambdaInvokePermission": {
+        "Type": "AWS::Lambda::Permission",
+        "Properties": {
+          "Action": "lambda:InvokeFunction",
+          "FunctionName": {
+            "Fn::GetAtt": [
+              "Function",
+              "Arn"
+            ]
+          },
+          "Principal": "apigateway.amazonaws.com",
+          "SourceArn": {
+            "Fn::Sub": [
+              "arn:aws:execute-api:${Region}:${AccountId}:${ApiId}/*/GET/",
+              {
+                "Region": { "Ref": "AWS::Region" },
+                "AccountId": { "Ref": "AWS::AccountId" },
+                "ApiId": { "Ref": "ApiGatewayHttpApi" }
+              }
+            ]
+          }
         }
       }
   },

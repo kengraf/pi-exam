@@ -5,7 +5,8 @@
       "S3bucketName" : { "Type" : "String" },
       "DeployName" : { "Type" : "String" },
       "CertificateArn" : { "Type" : "String" },
-      "CustomDomainName" : { "Type" : "String" }
+      "HostedZoneId" : { "Type" : "String" },
+      "DomainName" : { "Type" : "String" }
   },
   "Resources": {
     "LambdaExecutionRole": {
@@ -148,7 +149,40 @@
         "AutoDeploy": true
       }
     },
-    "LambdaInvokePermission": {
+    "ApiGatewayDomainName": {
+      "Type": "AWS::ApiGateway::DomainName",
+      "Properties": {
+        "DomainName": { "Ref": "DomainName" },
+        "EndpointConfiguration": {
+          "Types": [ "EDGE" ]
+        },
+        "RegionalCertificateArn": ( "Ref": "CertificateArn"
+      }
+    },
+    "MyRecordSet": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": { "Ref": "HostedZoneId" },
+        "Name": { "Ref": "DomainName" },
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "ApiGatewayDomainName",
+              "DistributionHostedZoneId"
+            ]
+          },
+          "DNSName": {
+            "Fn::GetAtt": [
+              "ApiGatewayDomainName",
+              "DistributionDomainName"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "LambdaInvokePermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -188,7 +222,7 @@
     "CustomDomainUrl": {
       "Description": "URL of the custom domain for the API Gateway endpoint",
       "Value": {
-        "Fn::Sub": "https://${CustomDomainName}/"
+        "Fn::Sub": "https://${DomainName}/"
       }
     }
   }

@@ -169,7 +169,7 @@
           "HostedZoneId": {
             "Fn::GetAtt": [
               "ApiGatewayDomainName",
-              "DistributionHostedZoneId"
+              "HostedZoneId"
             ]
           },
           "DNSName": {

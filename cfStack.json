@@ -150,7 +150,7 @@
       }
     },
     "ApiGatewayDomainName": {
-      "Type": "AWS::ApiGateway::DomainName",
+      "Type": "AWS::ApiGatewayV2::DomainName",
       "Properties": {
         "DomainName": { "Ref": "DomainName" },
         "EndpointConfiguration": {

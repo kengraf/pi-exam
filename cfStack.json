@@ -149,16 +149,6 @@
         "AutoDeploy": true
       }
     },
-    "ApiGatewayDomainName": {
-      "Type": "AWS::ApiGatewayV2::DomainName",
-      "Properties": {
-        "DomainName": { "Ref": "DomainName" },
-        "EndpointConfiguration": {
-          "Types": [ "REGIONAL" ]
-        },
-        "RegionalCertificateArn": { "Ref": "CertificateArn" }
-      }
-    },
     "MyRecordSet": {
       "Type": "AWS::Route53::RecordSet",
       "Properties": {
@@ -168,13 +158,13 @@
         "AliasTarget": {
           "HostedZoneId": {
             "Fn::GetAtt": [
-              "ApiGatewayDomainName",
+              "CustomDomainName",
               "HostedZoneId"
             ]
           },
           "DNSName": {
             "Fn::GetAtt": [
-              "ApiGatewayDomainName",
+              "CustomDomainName",
               "DistributionDomainName"
             ]
           }

@@ -146,7 +146,28 @@
         "AutoDeploy": true
       }
     },
-
+    "MyRecordSet": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": { "Ref": "HostedZoneId" },
+        "Name": { "Ref": "DomainName" },
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "CustomDomainName",
+              "HostedZoneId"
+            ]
+          },
+          "DNSName": {
+            "Fn::GetAtt": [
+              "CustomDomainName",
+              "DistributionDomainName"
+            ]
+          }
+        }
+      }
+    },
     "LambdaInvokePermission": {
         "Type": "AWS::Lambda::Permission",
         "Properties": {

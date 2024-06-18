@@ -1,6 +1,8 @@
 import json
 import datetime
 
+from uuid import uuid4 as uuid
+
 # Define the initial_state for the state to become the JWT cookie
 state = {}
 initial_state= {
@@ -75,7 +77,7 @@ def get_current_level():
     return grade
     
 def add_response_message( message ):
-    html_body.append("<h2 style='text-align: center'>" + message + "</h2><br/>\n")
+    html_body.append("<h2 style='text-align: center'>" + message + "</h2>\n")
 
 def pi_100_digits():
     # Success by setting form value 'pi' to 100 digits 
@@ -169,7 +171,7 @@ def lambda_handler(event, context):
         add_response_message( "Show you are worthly to join the Pi party." )
         form_page = """
             <form style="text-align: center" action="/prod/join">
-            <label for="pi">Enter the first 100 digits of Pi</label><br>
+            <label for="pi">Enter the first 100 digits of Pi:</label><br>
             <input type="text" id="pi" name="pi" value="" style="width:90%"><br>
             <input type="hidden" id="digits" name="digits" value="100">
             <input type="submit" value="Submit">
@@ -178,6 +180,7 @@ def lambda_handler(event, context):
         add_response_message(form_page)
 
     add_response_message("Your current level is: " + levels[get_current_level()])
+    add_response_message(str(uuid()))
     
     # Create the Set-Cookie header
     cookie_header = f"state={state}; Max-Age=3600; Path=/; Secure; HttpOnly;"

@@ -1,16 +1,20 @@
 import json
 import datetime
-import urllib.parse
 
-# Define the initial state for the JWT cookie
-state = {
-    "Pi100": False,
-    "SQLi": False,
-    "Parameter": False,
-    "Cookie": False,
-    "Admin": False,
-    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expiration time
-}
+# Define the initial_state for the state to become the JWT cookie
+state = {}
+initial_state= {
+        "Pi100": False,
+        "SQLi": False,
+        "Parameter": False,
+        "Cookie": False,
+        "Admin": False,
+        "Level": 0,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expiration time
+    }
+
+# Progress levels as different hacks are completed
+levels = [ "n00b", "Green Hat", "Haxor", "Pwn'r", "1337", "Champion"]
 
 form_values = {
     "pi": "",
@@ -25,154 +29,160 @@ html_header = """
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <title>Dynamic HTML with Flask</title>
+        <title>Pi Exam</title>
       </head>
       <body>
-        <h1>Pi hacking challenge</h1>
+        <h1 style="text-align: center">Pi hacking challenge</h1>
       """
 
-html_body = ['<!-- there ae at least 5 different ways to show the successful login page -->\n']
+html_body = ['<!-- there ae at least 5 different ways to show the successful login page, try admin for hints -->\n']
+
 html_footer = """
+        <h2 style='text-align: center'>
+        <a href="/prod/login" style='text-align: center'>HOME</a></h2>
       </body>
     </html>
     """
     
-def set_state():
-    # Secret key to sign the JWT
-    secret = "your_secret_key"
-
-    # Generate the JWT
-    token = json.dumps(state)
-    
-    return token
+def load_form_values(form_data):
+    #  values
+    form_values['pi'] = "".join(form_data.get('pi', ['']))
+    form_values['digits'] = int(form_data.get('digits', 100))
 
 def load_cookie_state(cookies):
     global state
+
     # Split the cookies string into individual cookies
     cookie_dict = {}
-    if cookies:
-        for cookie in cookies.split('; '):
-            name, value = cookie.split('=', 1)
-            cookie_dict[name] = value
+    for cookie in cookies:
+        name, value = cookie.split('=', 1)
+        cookie_dict[name] = value
 
-    # Use cookie state if it exists
-    state = cookie_dict.get('state',state)
+    # Use the initial state if no cookie
+    cookie = cookie_dict.get('state',0)
+    state = initial_state if cookie ==0 else eval(cookie)
     return
 
-def show_current_grade(): 
-    grade_levels = [ "Anon", "n00b", "Green Hat", "Haxor", "Pwn'r", "133t"]
+def get_current_level(): 
+    global state
     grade = 0
-    if x in state:
+    x = 0
+    for x in state:
         if state[x] == True:
             grade += 1
-    add_response_message("Your current level is: " + grade_levels[grade])
-    return grade_levels[grade]
-    
-def add_response_image( image_url ):
-    return 0
 
+    state['Level'] = grade
+    return grade
+    
 def add_response_message( message ):
-    html_body.append("<h2>" + message + "</h2\n")
+    html_body.append("<h2 style='text-align: center'>" + message + "</h2><br/>\n")
 
-def load_from_values(body):
-    # Handle base64 encoded payloads (Common for API Gateway)
-    if event.get('isBase64Encoded', False):
-        body = base64.b64decode(body).decode('utf-8')
-    
-    # Parse the form data
-    form_data = urllib.parse.parse_qs(body)
-    
-    # Extract specific values
-    form_values['pi'] = form_data.get('pi', [''])[0]
-    form_values['digits'] = int(form_data.get('digits', [''])[0])
-
-def pi_100 digits():
-    # Form value is pi to 100 digits 
-    add_response_message( "Yeah you know how to google pi.  Try something leet" )
+def pi_100_digits():
+    # Success by setting form value 'pi' to 100 digits 
+    return form_values['pi'] == pi
 
 def hidden_value_attack():
-    # pi by reducing the hidden form value "digits"
-    add_response_message( "parms not 100" )
+    # Success by reducing the hidden form value 'digits' to something less than 100
+    n = form_values['digits']
+    return form_values['pi'][:n] == pi[:n]
 
 def sqli_attack():
-    # parm is SQLi = success 0X02
-    add_response_message( "sqli found" )
-
+    # Strickly a python eval injection not a  SQLi attack (no DB)
+    # When this is called the form value is not pi, so pass if an injection attack
+    if pi[:10] in form_values['pi']:
+        # We are looking for something that is not Pi
+        return False
+    try:
+        result = eval(pi + '==' + form_values['pi'])
+    except SyntaxError:
+        result = False
+    return result
+        
 def cookie_attack():
-    # state cookie delta = success 0X08
-    add_response_message( "cookie changed" )
+    # Success by altering state cookie
+    return state['Level'] > 5
 
 def leet_level():
-    #    Direct request, return this code as HTML 0X08
+    # Direct request 
     # /champion page
-    add_response_message( "tbd champion page" )
+    return False
 
-def add_success_check():
-    url = "https://raw.githubusercontent.com/kengraf/pi-exam/main/images/success.png"
-    add_response_message( "<a href='" + url + "'>PI exam application source</a>")
+def show_image(image):
+    url = "https://raw.githubusercontent.com/kengraf/pi-exam/main/images/"
+    if image == "success.png" and get_current_level() == 5:
+        image = "trophy.png"
+    add_response_message( "<img src='" + url + image + "' style='text-align: center;width:200px'>")
     
 def lambda_handler(event, context):
-    response_body = ''
-    
+    global html_body
+    global html_header
+
     # Print the incoming event for debugging
     print("Event:", event)
     
+    # Reset the global body variable
+    html_body = ['<!-- there ae at least 5 different ways to show the successful login page -->\n']
+    
     # Define the cookie attributes
-    load_cookie_state(event['headers'].get('cookie', ''))
-    load_form_values(event.get('body', ''))
+    load_cookie_state(event.get('cookies', []))
 
     path = event.get('requestContext', {}).get('http', {}).get('path', '/')
-    if path.endswith("admin"):
+    if "admin" in path:
         # /admin page
         url = "https://github.com/kengraf/pi-exam/blob/main/pi.py"
         add_response_message( "<a href='" + url + "'>PI exam application source</a>")
         state['Admin'] = True
   
-    elif pi_100 digits():
-        # Form value is pi to 100 digits 
-        add_response_message( "Yeah you know how to google pi.  Try something leet" )
-        add_success_check()
-        state{'Pi100'] = True
- 
-    elif hidden_value_attack():
-        # pi by reducing the hidden form value "digits"
-        add_response_message( "parms not 100" )
-        add_success_check()
-        state{'Parameter'] = True
- 
-    elif sqli_attack():
-        # parm is SQLi = success 0X02
-        add_response_message( "sqli found" )
-        add_success_check()
-        state{'SQLi'] = True
-
-    elif cookie_attack():
-        # state cookie delta = success 0X08
-        add_response_message( "cookie changed" )
-         add_success_check()
-        state{'Cookie'] = True
-
-    elif leet_level():
-        #    Direct request, return this code as HTML 0X08
+    elif "champion" in path:
         # /champion page
-        add_response_message( "tbd champion page" )
-        add_success_check()
-        state{'pi'] = True
-
+        add_response_message( "Successfully made direct unlinked resource request" )
+        show_image( "trophy.png" )
+       
+    elif "join" in path:
+        load_form_values(event.get('queryStringParameters', {}))
+        if pi_100_digits():
+            # Form value is pi to 100 digits 
+            add_response_message( "Yeah, you know how to google pi.<br/> Try something more leet" )
+            show_image( "success.png" )
+            state['Pi100'] = True
+     
+        elif hidden_value_attack():
+            # pi by reducing the hidden form value "digits"
+            add_response_message( "Successfully altered hidden form field submission" )
+            show_image( "success.png" )
+            state['Parameter'] = True
+     
+        elif sqli_attack():
+            # parm is SQLi = success 0X02
+            add_response_message( "Successful code injection attempt" )
+            show_image( "success.png" )
+            state['SQLi'] = True
+    
+        elif cookie_attack():
+            # state cookie delta = success 0X08
+            add_response_message( "Successfully changed state cookie" )
+            show_image( "success.png" )
+            state['Cookie'] = True
+    
+        else:
+            add_response_message( "Hack Failed" )
+            show_image( "failure.png" )
+    
     else:
-        # show "login" page
+        # show "login" page for all other paths
+        show_image( "pi.png" )
         add_response_message( "Show you are worthly to join our PI party." )
         form_page = """
-            <form action="/">
+            <form style="text-align: center" action="/prod/join">
             <label for="pi">100 digits of PI:</label><br>
-            <input type="text" id="pi" name="pi" value=""><br>
+            <input type="text" id="pi" name="pi" value="" style="width:90%"><br>
             <input type="hidden" id="digits" name="digits" value="100">
             <input type="submit" value="Submit">
             </form>
             """
+        add_response_message(form_page)
 
-
-    show_current_grade()
+    add_response_message("Your current level is: " + levels[get_current_level()])
     
     # Create the Set-Cookie header
     cookie_header = f"state={state}; Max-Age=3600; Path=/; Secure; HttpOnly;"
@@ -184,8 +194,6 @@ def lambda_handler(event, context):
             'Set-Cookie': cookie_header,
             'Content-Type': 'text/html'
         },
-#        'body': json.dumps({'message': 'Cookie has been set!'})
-
         'body': html_header + " ".join(html_body) + html_footer
     }
 

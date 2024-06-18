@@ -166,10 +166,10 @@ def lambda_handler(event, context):
     else:
         # show "login" page for all other paths
         show_image( "pi.png" )
-        add_response_message( "Show you are worthly to join our PI party." )
+        add_response_message( "Show you are worthly to join the Pi party." )
         form_page = """
             <form style="text-align: center" action="/prod/join">
-            <label for="pi">100 digits of PI:</label><br>
+            <label for="pi">Enter the first 100 digits of Pi</label><br>
             <input type="text" id="pi" name="pi" value="" style="width:90%"><br>
             <input type="hidden" id="digits" name="digits" value="100">
             <input type="submit" value="Submit">

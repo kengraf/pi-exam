@@ -99,13 +99,8 @@ def sqli_attack():
     return result
         
 def cookie_attack():
-    # Success by altering state cookie
-    return state['Level'] > 5
-
-def leet_level():
-    # Direct request 
-    # /champion page
-    return False
+    # Success by altering state cookie to any invalid level value
+    return state['Level'] not in range(0,5)
 
 def show_image(image):
     url = "https://raw.githubusercontent.com/kengraf/pi-exam/main/images/"
@@ -127,42 +122,42 @@ def lambda_handler(event, context):
     load_cookie_state(event.get('cookies', []))
 
     path = event.get('requestContext', {}).get('http', {}).get('path', '/')
-    if "admin" in path:
+    if cookie_attack():
+        # state level set to invalid value
+        state['Cookie'] = True
+        add_response_message( "Successfully changed state cookie" )
+        show_image( "success.png" )
+
+    elif "admin" in path:
         # /admin page
+        state['Admin'] = True
         url = "https://github.com/kengraf/pi-exam/blob/main/pi.py"
         add_response_message( "<a href='" + url + "'>PI exam application source</a>")
-        state['Admin'] = True
   
     elif "champion" in path:
         # /champion page
-        add_response_message( "Successfully made direct unlinked resource request" )
+        add_response_message( "You don't advance your knowledge by faking it!" )
         show_image( "trophy.png" )
        
     elif "join" in path:
         load_form_values(event.get('queryStringParameters', {}))
         if pi_100_digits():
             # Form value is pi to 100 digits 
+            state['Pi100'] = True
             add_response_message( "Yeah, you know how to google pi.<br/> Try something more leet" )
             show_image( "success.png" )
-            state['Pi100'] = True
      
         elif hidden_value_attack():
             # pi by reducing the hidden form value "digits"
+            state['Parameter'] = True
             add_response_message( "Successfully altered hidden form field submission" )
             show_image( "success.png" )
-            state['Parameter'] = True
      
         elif sqli_attack():
             # parm is SQLi = success 0X02
+            state['SQLi'] = True
             add_response_message( "Successful code injection attempt" )
             show_image( "success.png" )
-            state['SQLi'] = True
-    
-        elif cookie_attack():
-            # state cookie delta = success 0X08
-            add_response_message( "Successfully changed state cookie" )
-            show_image( "success.png" )
-            state['Cookie'] = True
     
         else:
             add_response_message( "Hack Failed" )

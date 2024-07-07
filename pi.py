@@ -37,7 +37,7 @@ html_header = """
         <h1 style="text-align: center">Pi hacking challenge</h1>
       """
 
-html_body = ['<!-- there ae at least 5 different ways to show the successful login page, try admin for hints -->\n']
+html_body = ['']
 
 html_footer = """
         <h2 style='text-align: center'>
@@ -45,7 +45,13 @@ html_footer = """
       </body>
     </html>
     """
-    
+
+def reset_html_body():
+    global html_body
+    html_body = [""]
+    html_body.append("<!-- There are at least 5 different ways to show the success page.-->\n")
+    html_body.append("<!-- Try the admin page for hints -->\n")
+
 def load_form_values(form_data):
     #  values
     form_values['pi'] = "".join(form_data.get('pi', ['']))
@@ -117,9 +123,9 @@ def lambda_handler(event, context):
     # Print the incoming event for debugging
     print("Event:", event)
     
-    # Reset the global body variable
-    html_body = ['<!-- there ae at least 5 different ways to show the successful login page -->\n']
-    
+    # Reset the global body variable, global variable values can persist between lamdba invocations
+    reset_html_body()
+
     # Define the cookie attributes
     load_cookie_state(event.get('cookies', []))
 
